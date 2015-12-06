@@ -103,7 +103,7 @@ describe('t.declare([name])', function () {
 
   });
 
-  describe('constructor', function () {
+  describe('ctor', function () {
 
     it('should be idempotent', function () {
       var p1 = A(aValue);
@@ -134,6 +134,34 @@ describe('t.declare([name])', function () {
     it('should return true when x is an instance of the struct', function () {
       var a = new A(aValue);
       assert.ok(A.is(a));
+    });
+
+  });
+
+  describe('cyclic references', function() {
+    var TreeItem = t.declare('TreeItem');
+
+    TreeItem.define(t.struct({
+      id: t.Number,
+      parent: t.maybe(TreeItem),
+      children: t.list(TreeItem),
+      favoriteChild: t.maybe(TreeItem)
+    }));
+
+    it('should allow cyclic references in struct', function() {
+      var root = {id: 1, parent: null, children: []};
+      var child = {id: 2, parent: root, children: []};
+
+      root.children.push(child);
+      root.favoriteChild = child;
+
+      var treeItem = TreeItem(root);
+      var treeItemFavoriteChild = treeItem.favoriteChild;
+
+      assert(TreeItem.is(treeItem));
+      assert(TreeItem.is(treeItemFavoriteChild));
+      assert(treeItemFavoriteChild.parent === treeItem);
+      assert(treeItem.children[0] === treeItemFavoriteChild);
     });
 
   });
