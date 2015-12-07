@@ -164,6 +164,26 @@ describe('t.declare([name])', function () {
       assert(treeItem.children[0] === treeItemFavoriteChild);
     });
 
+    it('should slay monsters', function() {
+      var A = t.declare('A');
+      var B = t.declare('B');
+
+      A.define(t.struct({
+          value: t.Number,
+            b: B
+      }));
+
+      B.define(t.struct({
+          value: t.Number,
+            b: A
+      }));
+
+      var monster = {value: 1};
+      monster.b = monster;
+
+      assert.ok(B.is(A(monster).b));
+    });
+
   });
 
 });
