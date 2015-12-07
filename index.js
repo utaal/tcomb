@@ -329,6 +329,9 @@ function struct(props, name) {
 
   var displayName = name || struct.getDefaultName(props);
 
+  var structsBeingCreated = [];
+  var recursionDepth = 0;
+
   function Struct(value, path) {
 
     if (Struct.is(value)) { // implements idempotency
@@ -344,6 +347,18 @@ function struct(props, name) {
       return new Struct(value, path);
     }
 
+    for (var i in structsBeingCreated) {
+      if (structsBeingCreated[i].value === value) {
+        return structsBeingCreated[i].that;
+      }
+    }
+
+    structsBeingCreated.push({
+      value: value,
+      that: this
+    });
+    recursionDepth += 1;
+
     for (var k in props) {
       if (props.hasOwnProperty(k)) {
         var expected = props[k];
@@ -356,6 +371,10 @@ function struct(props, name) {
       Object.freeze(this);
     }
 
+    recursionDepth -= 1;
+    if (recursionDepth == 0) {
+      structsBeingCreated = [];
+    }
   }
 
   Struct.meta = {
